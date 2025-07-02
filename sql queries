@@ -1,0 +1,112 @@
+SELECT 
+    s.customer_id,
+    SUM(m.price) AS total_spent
+FROM Sales s
+JOIN Menu m ON s.product_id = m.product_id
+GROUP BY s.customer_id;
+
+
+SELECT 
+    customer_id,
+    COUNT(DISTINCT order_date) AS visit_days
+FROM Sales
+GROUP BY customer_id;
+
+
+
+
+SELECT customer_id, product_name
+FROM (
+    SELECT 
+        s.customer_id,
+        s.order_date,
+        m.product_name,
+        RANK() OVER (PARTITION BY s.customer_id ORDER BY s.order_date ASC) AS rnk
+    FROM Sales s
+    JOIN Menu m ON s.product_id = m.product_id
+) t
+WHERE rnk = 1;
+
+
+
+
+SELECT 
+    m.product_name,
+    COUNT(*) AS times_purchased
+FROM Sales s
+JOIN Menu m ON s.product_id = m.product_id
+GROUP BY m.product_name
+ORDER BY times_purchased DESC
+LIMIT 1;
+
+
+
+SELECT customer_id, product_name
+FROM (
+    SELECT 
+        s.customer_id,
+        m.product_name,
+        COUNT(*) AS purchase_count,
+        RANK() OVER (PARTITION BY s.customer_id ORDER BY COUNT(*) DESC) AS rnk
+    FROM Sales s
+    JOIN Menu m ON s.product_id = m.product_id
+    GROUP BY s.customer_id, m.product_name
+) t
+WHERE rnk = 1;
+
+
+SELECT customer_id, product_name
+FROM (
+    SELECT 
+        s.customer_id,
+        s.order_date,
+        m.product_name,
+        RANK() OVER (PARTITION BY s.customer_id ORDER BY s.order_date DESC) AS rnk
+    FROM Sales s
+    JOIN Menu m ON s.product_id = m.product_id
+    JOIN Members mem ON s.customer_id = mem.customer_id
+    WHERE s.order_date < mem.join_date
+) t
+WHERE rnk = 1;
+
+
+
+
+SELECT 
+    s.customer_id,
+    COUNT(*) AS total_items,
+    SUM(m.price) AS total_amount
+FROM Sales s
+JOIN Menu m ON s.product_id = m.product_id
+JOIN Members mem ON s.customer_id = mem.customer_id
+WHERE s.order_date < mem.join_date
+GROUP BY s.customer_id;
+
+
+
+SELECT 
+    s.customer_id,
+    SUM(
+        CASE 
+            WHEN m.product_name = 'sushi' THEN m.price * 10 * 2
+            ELSE m.price * 10
+        END
+    ) AS total_points
+FROM Sales s
+JOIN Menu m ON s.product_id = m.product_id
+GROUP BY s.customer_id;
+
+
+
+
+
+SELECT 
+    s.customer_id,
+    SUM(m.price * 10 * 2) AS bonus_week_points
+FROM Sales s
+JOIN Menu m ON s.product_id = m.product_id
+JOIN Members mem ON s.customer_id = mem.customer_id
+WHERE s.order_date BETWEEN mem.join_date AND DATE_ADD(mem.join_date, INTERVAL 6 DAY)
+  AND s.customer_id IN ('A', 'B')
+GROUP BY s.customer_id;
+
