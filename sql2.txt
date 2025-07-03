@@ -15,3 +15,29 @@ group by month;
 select event_type ,count(*) as no_of_events from clique_bait.events 
 group by event_type; 
 ​
+
+--5
+select (select count(*) from clique_bait.events 
+where event_type = 3)/count(*) * 100 as percentage_of_purchase_events from clique_bait.events;
+
+
+--6
+select (select count(*) from clique_bait.events 
+where page_id = 12 and event_type != 3)/count(*) * 100 as percentage_of_purchase_events from clique_bait.events;
+
+
+--7
+select page_name , count(*) as views from clique_bait.events join clique_bait.page_hierarchy using(page_id)
+where event_type = 1
+group by page_name
+order by views desc
+limit 3;
+
+
+--9
+select product_id , count(*) as purchase from clique_bait.events join clique_bait.page_hierarchy using(page_id)
+where event_type = 3
+group by product_id
+order by purchase desc
+limit 3;
+
