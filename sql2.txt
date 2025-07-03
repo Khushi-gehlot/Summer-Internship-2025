@@ -1,0 +1,17 @@
+--1
+select distinct user_id from clique_bait.users; 
+
+
+--2
+select count(distinct cookie_id) / count(distinct user_id) as cookies_on_avg from clique_bait.users;
+
+--3
+SELECT MONTH(event_time) AS month, count(*)
+FROM clique_bait.events
+group by month;
+
+
+--4
+select event_type ,count(*) as no_of_events from clique_bait.events 
+group by event_type; 
+​
