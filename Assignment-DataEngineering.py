@@ -12,7 +12,8 @@ def create_table(table_name, columns):
 table_name = []
 columns = {}
 
-distinct_rows = d.select("RawTable").distinct().collect()
+distinct_rows = d.select("RawTable","CurratedTableName","PresentationLayerTable").distinct().collect()
+
 
 print(distinct_rows)
 for row in distinct_rows: 
