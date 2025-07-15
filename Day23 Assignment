@@ -1,0 +1,68 @@
+SPARK_VERSION = 3.2
+
+%pip install git+https://github.com/awslabs/python-deequ.git
+
+
+import os
+os.environ["SPARK_VERSION"] = "3.3"
+
+from pyspark.sql.functions import col, lit, current_timestamp, sum as _sum
+from delta.tables import DeltaTable
+from pydeequ.checks import Check, CheckLevel
+from pydeequ.verification import VerificationSuite, VerificationResult
+
+
+dbutils.widgets.text("date", "2024-07-26")
+date = dbutils.widgets.get("date")
+booking_file = f"dbfs:/Volumes/workspace/skit/bookingsdata/Bookings/bookings_{date}.csv"
+customer_file = f"dbfs:/Volumes/workspace/skit/bookingsdata/Customers/customers_{date}.csv"
+#booking_df = spark.read.csv(booking_file, header=True, inferSchema=True, quote= "\"", multiLine=True)
+#customer_df = spark.read.csv(customer_file, header=True, inferSchema=True)
+booking_df = spark.read \
+  .format("csv") \
+  .option("header", "true") \
+  .option("inferSchema", "true") \
+  .option("quote", "\"") \
+  .option("multiLine", "true") \
+  .load(booking_file)
+
+display(booking_df)
+#display(customer_df)
+booking_df.printSchema()
+
+
+from pyspark.sql.functions import col
+# booking id , cust id , amount
+
+def isComplete(df, column_name): 
+    c = df.filter(col(column_name).isNull()).count()
+    if c > 0:
+        booking_df = df.na.drop()
+        return False
+    else: 
+        return True
+
+# dbutils.widgets.text("column_name", "booking_id")
+# column = dbutils.widgets.get("column_name")   
+n = isComplete(booking_df, "booking_id")
+n = isComplete(booking_df, "customer_id")
+n = isComplete(booking_df, "amount")
+
+display(booking_df)
+
+
+booking_df.write.format("delta").mode("overwrite").saveAsTable("booking_delta_table")
+
+
+import pandas as pd
+
+current_df = spark.table("booking_delta_table")
+
+current_df_pd = current_df.toPandas()
+booking_df_pd = booking_df.toPandas()
+
+merged_df = pd.merge(booking_df_pd, current_df_pd, on="booking_id",how="left")
+display(booking_df)
+display(current_df)
+
+display(merged_df)
