@@ -1,0 +1,17 @@
+# read csv files to df
+sales_df = spark.read.csv("/Volumes/workspace/default/skit_assignment/Sales.csv", header=True, inferSchema=True, quote= "\"", multiLine=True)
+display(sales_df)
+
+#filter dataframe
+updated = sales_df.filter(sales_df['Sales'] > 1000)
+display(updated)
+
+#selected columns
+selected = updated.select('ORDERNUMBER', 'QUANTITYORDERED', 'PRICEEACH', 'ORDERLINENUMBER', 'SALES')
+display(selected)
+
+#save as delta table
+sales_df.write.format("delta").mode("append").saveAsTable("default.agg_sales_data")
+
+#version control
+df_history = spark.sql("describe history agg_sales_data")
